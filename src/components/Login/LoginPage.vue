@@ -24,14 +24,11 @@
                     <div class="section-title">Đăng nhập hệ thống</div>
                     <div class="section-subtitle">Vui lòng nhập mã nhân viên để tiếp tục</div>
 
-                    <div class="form-group">
-                        <label class="form-label">Mã nhân viên</label>
-                        <input type="text" id="employee-id" class="form-input" placeholder="Nhập mã nhân viên"
-                            required="">
-                        <div id="employee-id-error" class="error-message" style="display: none;"></div>
-                    </div>
+                    <input type="text" id="employee-id" v-model="employeeId" @input="checkEmployeeId"
+                        class="form-input" />
+                    <div id="employee-id-error" v-if="errorMessage" style="color:red">{{ errorMessage }}</div>
 
-                    <button type="button" class="login-btn" onclick="checkEmployeeId()">
+                    <button type="button" class="login-btn" @click="checkEmployeeId">
                         <div class="loading"></div>
                         <span class="btn-text">Tiếp tục</span>
                     </button>
@@ -60,7 +57,7 @@
                         Quay lại
                     </button>
                 </div> -->
-               
+
             </div>
         </div>
     </div>
@@ -83,8 +80,119 @@
 export default {
     name: 'LoginPage',
 
+    data() {
+        return {
+            employeeDatabase: {
+                'EMP001': {
+                    id: 'EMP001',
+                    name: 'Nguyễn Văn A',
+                    email: 'nguyenvana@heineken.com',
+                    isFirstTime: true,
+                    isActive: true
+                },
+                'EMP002': {
+                    id: 'EMP002',
+                    name: 'Trần Thị B',
+                    email: 'tranthib@heineken.com',
+                    isFirstTime: false,
+                    isActive: true
+                },
+                'EMP003': {
+                    id: 'EMP003',
+                    name: 'Lê Văn C',
+                    email: '',
+                    isFirstTime: true,
+                    isActive: true
+                },
+                'EMP004': {
+                    id: 'EMP004',
+                    name: 'Phạm Thị D',
+                    email: 'phamthid@heineken.com',
+                    isFirstTime: true,
+                    isActive: false
+                }
+            },
 
+            currentEmployee: null,
+            currentStep: 1,
+            resendCountdown: 0,
+            resendTimer: null,
+            employeeId: "",
+            errorMessage: ""
+        }
+    },
     methods: {
+
+        // checkEmployeeId(event) {
+        //     const _this = this
+        //     const inputEl = document.getElementById('employee-id'); // element
+        //     const employeeId = inputEl.value.trim().toUpperCase();  // value
+        //     const btn = event.target;
+        //     console.log("employeeId", employeeId)
+        //     const errorDiv = document.getElementById('employee-id-error');
+
+        //     // // Clear previous errors
+        //     errorDiv.style.display = 'none';
+        //     document.getElementById('employee-id').classList.add('error');
+
+        //     console.log("Check", document.getElementById('employee-id').attributes)
+
+
+        //     inputEl.addEventListener('input', (e) => {
+        //         console.log('Giá trị thay đổi:', e.target.value);
+        //     });
+        //     if (!employeeId) {
+        //         //showError('employee-id', 'Vui lòng nhập mã nhân viên');
+        //         console.log('Vui lòng nhập mã nhân viên');
+        //         return;
+        //     }
+
+        //     btn.classList.add('btn-loading');
+
+        //     // Simulate API call
+        //     setTimeout(() => {
+        //         btn.classList.remove('btn-loading');
+
+        //         const employee = _this.employeeDatabase[employeeId];
+
+        //         if (!employee) {
+        //             // Employee not found in system
+        //             //goToStep('step-not-found', 2);
+        //             return;
+        //         }
+
+        //         if (!employee.isActive) {
+        //             // Account not initialized
+        //             //goToStep('step-not-found', 2);
+        //             return;
+        //         }
+
+        //         if (!employee.email) {
+        //             // No email configured
+        //             //goToStep('step-not-found', 2);
+        //             return;
+        //         }
+
+        //         _this.currentEmployee = employee;
+
+        //         if (employee.isFirstTime) {
+        //             // First time login - send OTP
+        //             //sendOTPForFirstTime();
+        //         } else {
+        //             // Regular login - go to password
+        //             // goToPasswordStep(false);
+        //         }
+        //     }, 2000);
+        // },
+
+        checkEmployeeId() {
+            if (!this.employeeId.trim()) {
+                this.errorMessage = "❌ Vui lòng nhập mã nhân viên";
+            } else {
+                this.errorMessage = "";
+            }
+            console.log("Giá trị thay đổi:", this.employeeId);
+        },
         moveToNext(event, index) {
             const current = event.target;
             if (current.value.length === 1 && index < 3) {
