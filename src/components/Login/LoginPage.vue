@@ -16,9 +16,17 @@
                     <div class="section-title">Đăng nhập hệ thống</div>
                     <div class="section-subtitle">Vui lòng nhập mã nhân viên để tiếp tục</div>
 
-                    <input type="text" id="employee-id" v-model="employeeId" @input="checkEmployeeId"
-                        class="form-input" />
-                    <div id="employee-id-error" v-if="errorMessage" style="color:red">{{ errorMessage }}</div>
+                    <input type="text" id="employee-id" v-model="employeeId" @input="validateField('employeeId')"
+                        class="form-input" placeholder="Mã nhân viên" />
+                    <div v-if="errorMessage.employeeId" class="error-message">
+                        {{ errorMessage.employeeId }}
+                    </div>
+
+                    <input type="password" id="employee-password" v-model="password" @input="validateField('password')"
+                        class="form-input" placeholder="Mật khẩu" />
+                    <div v-if="errorMessage.password" class="error-message">
+                        {{ errorMessage.password }}
+                    </div>
 
                     <button type="button" class="login-btn" @click="loginEmployeeId">
                         <div class="loading"></div>
@@ -97,51 +105,7 @@
                     </button>
                 </div>
 
-                <!-- Step 4: Password Input (Both First Time & Regular) -->
-                <div v-show="currentStep === 4" class="form-section">
-                    <div class="section-title" id="password-title">Tạo mật khẩu</div>
-                    <div class="section-subtitle" id="password-subtitle">Vui lòng tạo mật khẩu cho tài khoản của bạn
-                    </div>
 
-                    <div class="user-info-card" v-if="currentEmployee">
-                        <div class="user-info-title">Thông tin đăng nhập</div>
-                        <div class="user-info-item">
-                            <span class="user-info-label">Mã nhân viên:</span>
-                            <span class="user-info-value" id="display-employee-id-2">{{ currentEmployee.id }}</span>
-                        </div>
-                        <div class="user-info-item">
-                            <span class="user-info-label">Email:</span>
-                            <span class="user-info-value" id="display-email-2">{{ currentEmployee.email }}</span>
-                        </div>
-                    </div>
-
-                    <div id="password-info" class="info-message">
-                        <strong>Lần đăng nhập đầu tiên:</strong><br>
-                        Vui lòng tạo mật khẩu mới cho tài khoản. Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ
-                        thường và số.
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" id="password-label">Tạo mật khẩu mới</label>
-                        <input type="password" id="password" class="form-input" placeholder="Nhập mật khẩu">
-                        <div id="password-error" class="error-message" style="display: none;"></div>
-                    </div>
-
-                    <div class="form-group" id="confirm-password-group">
-                        <label class="form-label">Xác nhận mật khẩu</label>
-                        <input type="password" id="confirm-password" class="form-input" placeholder="Nhập lại mật khẩu">
-                        <div id="confirm-password-error" class="error-message" style="display: none;"></div>
-                    </div>
-
-                    <button type="button" class="login-btn" onclick="submitPassword()">
-                        <div class="loading"></div>
-                        <span class="btn-text" id="password-btn-text">Tạo mật khẩu &amp; Đăng nhập</span>
-                    </button>
-
-                    <button type="button" class="login-btn btn-secondary" @click="goBackToStart">
-                        Quay lại
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -160,29 +124,25 @@ export default {
                     id: 'EMP001',
                     name: 'Nguyễn Văn A',
                     email: 'nguyenvana@heineken.com',
-                    isFirstTime: true,
-                    isActive: true
+                    password: 'Huy1412!'
                 },
                 'EMP002': {
                     id: 'EMP002',
                     name: 'Trần Thị B',
                     email: 'tranthib@heineken.com',
-                    isFirstTime: false,
-                    isActive: true
+                    password: 'Huy1412!'
                 },
                 'EMP003': {
                     id: 'EMP003',
                     name: 'Lê Văn C',
                     email: '',
-                    isFirstTime: true,
-                    isActive: true
+                    password: 'Huy1412!'
                 },
                 'EMP004': {
                     id: 'EMP004',
                     name: 'Phạm Thị D',
                     email: 'phamthid@heineken.com',
-                    isFirstTime: true,
-                    isActive: false
+                    password: 'Huy1412!'
                 }
             },
 
@@ -191,8 +151,12 @@ export default {
             resendCountdown: 0,
             resendTimer: null,
             employeeId: "",
-            errorMessage: "",
-            otp: ["", "", "", ""]
+            errorMessage: {
+                employeeId: "",
+                password: ""
+            },
+            otp: ["", "", "", ""],
+            password: ""
 
         }
     },
@@ -203,34 +167,58 @@ export default {
             this.employeeId = "";
             this.errorMessage = "";
         },
-        checkEmployeeId() {
-            this.currentStep = 1
-            if (!this.employeeId.trim()) {
-                this.errorMessage = "❌ Vui lòng nhập mã nhân viên";
-            } else {
-                this.errorMessage = "";
+        validateField(field) {
+            if (field === "employeeId") {
+                if (!this.employeeId.trim()) {
+                    this.errorMessage.employeeId = "❌ Vui lòng nhập mã nhân viên";
+                } else {
+                    this.errorMessage.employeeId = "";
+                }
             }
 
-            console.log("Giá trị thay đổi:", this.employeeId);
+            if (field === "password") {
+                const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
+
+                if (!this.password.trim()) {
+                    this.errorMessage.password = "❌ Vui lòng nhập mật khẩu";
+                } else if (!regex.test(this.password)) {
+                    this.errorMessage.password =
+                        "❌ Mật khẩu phải có ít nhất 6 ký tự, bao gồm 1 chữ hoa, 1 số và 1 ký tự đặc biệt";
+                } else {
+                    this.errorMessage.password = "";
+                }
+            }
+
+            if (this.errorMessage.employeeId || this.errorMessage.password) {
+                console.log("FALSE")
+                return false;
+            }
+            console.log("TRUE")
+            return true;
         },
         loginEmployeeId() {
-            this.currentEmployee = this.employeeDatabase[this.employeeId]
-            if (!this.currentEmployee && this.employeeId.trim()) {
-                this.currentStep = 2
-            } else if (this.currentEmployee && this.employeeId.trim()) {
-                if (this.currentEmployee.isFirstTime) {
-                    this.currentStep = 3
-                } else {
-                    this.currentStep = 4
-                }
+            // if () {
+            //     return; // Dừng lại nếu có lỗi
+            // }
 
+            this.currentEmployee = this.employeeDatabase[this.employeeId];
+
+            if (!this.currentEmployee) {
+                this.errorMessage.employeeId = "❌ Không tìm thấy tài khoản này";
+                return;
             }
-            else {
-                {
-                    this.checkEmployeeId()
-                }
+
+            if (this.password !== this.currentEmployee.password) {
+                this.errorMessage.password = "❌ Mật khẩu không đúng";
+                return;
             }
-            console.log("checl", this.currentEmployee)
+
+            // Nếu đúng cả employeeId và password
+            console.log("Đăng nhập thành công:", this.currentEmployee);
+            this.errorMessage = { employeeId: "", password: "" };
+
+            // Chuyển bước
+            this.currentStep = 3;
         },
 
         moveToNext(index) {
@@ -434,6 +422,8 @@ body {
     font-size: 16px;
     transition: all 0.3s ease;
     background: #fafbfc;
+    margin-bottom: 16px;
+
 }
 
 .form-input:focus {
