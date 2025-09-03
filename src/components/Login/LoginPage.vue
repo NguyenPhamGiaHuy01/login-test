@@ -11,16 +11,8 @@
             </div>
 
             <div class="content">
-
-                <div class="step-indicator">
-                    <div class="step-dot active" id="step-1"></div>
-                    <div class="step-dot" id="step-2"></div>
-                    <div class="step-dot" id="step-3"></div>
-                    <div class="step-dot" id="step-4"></div>
-                </div>
-
                 <!-- Step 1: Employee ID Input -->
-                <div id="step-employee-id" class="form-section active">
+                <div v-show="currentStep === 1" class="form-section active">
                     <div class="section-title">Đăng nhập hệ thống</div>
                     <div class="section-subtitle">Vui lòng nhập mã nhân viên để tiếp tục</div>
 
@@ -28,14 +20,14 @@
                         class="form-input" />
                     <div id="employee-id-error" v-if="errorMessage" style="color:red">{{ errorMessage }}</div>
 
-                    <button type="button" class="login-btn" @click="checkEmployeeId">
+                    <button type="button" class="login-btn" @click="loginEmployeeId">
                         <div class="loading"></div>
                         <span class="btn-text">Tiếp tục</span>
                     </button>
                 </div>
 
                 <!-- Step 2: Account Not Found -->
-                <!-- <div id="step-not-found" class="form-section">
+                <div v-show="currentStep === 2" class="form-section">
                     <div class="section-title">Tài khoản chưa được đăng ký</div>
                     <div class="section-subtitle">Hệ thống không tìm thấy thông tin tài khoản của bạn</div>
 
@@ -53,27 +45,108 @@
                         </div>
                     </div>
 
-                    <button type="button" class="login-btn btn-secondary" onclick="goBackToStart()">
+                    <button type="button" class="login-btn btn-secondary" @click="goBackToStart">
                         Quay lại
                     </button>
-                </div> -->
+                </div>
 
+                <div v-show="currentStep === 3" class="form-section">
+                    <div class="section-title">Xác thực OTP</div>
+                    <div class="section-subtitle">Mã OTP đã được gửi đến email của bạn</div>
+
+                    <div class="user-info-card" v-if="currentEmployee">
+
+                        <div class="user-info-title">Thông tin tài khoản</div>
+                        <div class="user-info-item">
+                            <span class="user-info-label">Mã nhân viên:</span>
+                            <span class="user-info-value" id="display-employee-id"> {{ currentEmployee.id }}</span>
+                        </div>
+                        <div class="user-info-item">
+                            <span class="user-info-label">Email:</span>
+                            <span class="user-info-value" id="display-email"> {{ currentEmployee.email }}</span>
+                        </div>
+                    </div>
+
+                    <div class="success-message">
+                        <strong>Mã OTP đã được gửi!</strong><br>
+                        Vui lòng kiểm tra email và nhập mã xác thực bên dưới
+                    </div>
+
+                    <div class="otp-input">
+                        <input v-for="(digit, index) in otp" :key="index" type="text" class="otp-digit" maxlength="1"
+                            v-model="otp[index]" @input="moveToNext(index)"
+                            @keydown.backspace="moveToPrev(index, $event)" ref="otpInputs" />
+                    </div>
+
+
+                    <div id="otp-error" class="error-message" style="display: none; text-align: center;"></div>
+
+                    <div class="resend-section">
+                        <div class="resend-text">Không nhận được mã OTP?</div>
+                        <a href="#" id="resend-link" class="resend-link" onclick="resendOTP()">Gửi lại mã</a>
+                        <span id="resend-countdown" class="countdown" style="display: none;"></span>
+                    </div>
+
+                    <button type="button" class="login-btn" @click="verifyOTP" style="margin-top: 20px;">
+                        <div class="loading"></div>
+                        <span class="btn-text">Xác thực</span>
+                    </button>
+
+                    <button type="button" class="login-btn btn-secondary" @click="goBackToStart">
+                        Quay lại
+                    </button>
+                </div>
+
+                <!-- Step 4: Password Input (Both First Time & Regular) -->
+                <div v-show="currentStep === 4" class="form-section">
+                    <div class="section-title" id="password-title">Tạo mật khẩu</div>
+                    <div class="section-subtitle" id="password-subtitle">Vui lòng tạo mật khẩu cho tài khoản của bạn
+                    </div>
+
+                    <div class="user-info-card" v-if="currentEmployee">
+                        <div class="user-info-title">Thông tin đăng nhập</div>
+                        <div class="user-info-item">
+                            <span class="user-info-label">Mã nhân viên:</span>
+                            <span class="user-info-value" id="display-employee-id-2">{{ currentEmployee.id }}</span>
+                        </div>
+                        <div class="user-info-item">
+                            <span class="user-info-label">Email:</span>
+                            <span class="user-info-value" id="display-email-2">{{ currentEmployee.email }}</span>
+                        </div>
+                    </div>
+
+                    <div id="password-info" class="info-message">
+                        <strong>Lần đăng nhập đầu tiên:</strong><br>
+                        Vui lòng tạo mật khẩu mới cho tài khoản. Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ
+                        thường và số.
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" id="password-label">Tạo mật khẩu mới</label>
+                        <input type="password" id="password" class="form-input" placeholder="Nhập mật khẩu">
+                        <div id="password-error" class="error-message" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-group" id="confirm-password-group">
+                        <label class="form-label">Xác nhận mật khẩu</label>
+                        <input type="password" id="confirm-password" class="form-input" placeholder="Nhập lại mật khẩu">
+                        <div id="confirm-password-error" class="error-message" style="display: none;"></div>
+                    </div>
+
+                    <button type="button" class="login-btn" onclick="submitPassword()">
+                        <div class="loading"></div>
+                        <span class="btn-text" id="password-btn-text">Tạo mật khẩu &amp; Đăng nhập</span>
+                    </button>
+
+                    <button type="button" class="login-btn btn-secondary" @click="goBackToStart">
+                        Quay lại
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- DASHBOARD -->
-    <!-- <div id="dashboard" class="dashboard">
-        <div class="dashboard-header">
-            <div class="dashboard-title">Chào mừng đến Sales Portal</div>
-            <div class="dashboard-subtitle">Đăng nhập thành công!</div>
-            <div style="margin-top: 16px; color: #64748b; font-size: 14px;">
-                Tài khoản: <span id="logged-user-info"></span>
-            </div>
-            <button class="logout-btn" onclick="logout()">Đăng xuất</button>
-        </div>
 
-    </div> -->
 </template>
 
 <script>
@@ -118,88 +191,57 @@ export default {
             resendCountdown: 0,
             resendTimer: null,
             employeeId: "",
-            errorMessage: ""
+            errorMessage: "",
+            otp: ["", "", "", ""]
+
         }
     },
     methods: {
 
-        // checkEmployeeId(event) {
-        //     const _this = this
-        //     const inputEl = document.getElementById('employee-id'); // element
-        //     const employeeId = inputEl.value.trim().toUpperCase();  // value
-        //     const btn = event.target;
-        //     console.log("employeeId", employeeId)
-        //     const errorDiv = document.getElementById('employee-id-error');
-
-        //     // // Clear previous errors
-        //     errorDiv.style.display = 'none';
-        //     document.getElementById('employee-id').classList.add('error');
-
-        //     console.log("Check", document.getElementById('employee-id').attributes)
-
-
-        //     inputEl.addEventListener('input', (e) => {
-        //         console.log('Giá trị thay đổi:', e.target.value);
-        //     });
-        //     if (!employeeId) {
-        //         //showError('employee-id', 'Vui lòng nhập mã nhân viên');
-        //         console.log('Vui lòng nhập mã nhân viên');
-        //         return;
-        //     }
-
-        //     btn.classList.add('btn-loading');
-
-        //     // Simulate API call
-        //     setTimeout(() => {
-        //         btn.classList.remove('btn-loading');
-
-        //         const employee = _this.employeeDatabase[employeeId];
-
-        //         if (!employee) {
-        //             // Employee not found in system
-        //             //goToStep('step-not-found', 2);
-        //             return;
-        //         }
-
-        //         if (!employee.isActive) {
-        //             // Account not initialized
-        //             //goToStep('step-not-found', 2);
-        //             return;
-        //         }
-
-        //         if (!employee.email) {
-        //             // No email configured
-        //             //goToStep('step-not-found', 2);
-        //             return;
-        //         }
-
-        //         _this.currentEmployee = employee;
-
-        //         if (employee.isFirstTime) {
-        //             // First time login - send OTP
-        //             //sendOTPForFirstTime();
-        //         } else {
-        //             // Regular login - go to password
-        //             // goToPasswordStep(false);
-        //         }
-        //     }, 2000);
-        // },
-
+        goBackToStart() {
+            this.currentStep = 1;
+            this.employeeId = "";
+            this.errorMessage = "";
+        },
         checkEmployeeId() {
+            this.currentStep = 1
             if (!this.employeeId.trim()) {
                 this.errorMessage = "❌ Vui lòng nhập mã nhân viên";
             } else {
                 this.errorMessage = "";
             }
+
             console.log("Giá trị thay đổi:", this.employeeId);
         },
-        moveToNext(event, index) {
-            const current = event.target;
-            if (current.value.length === 1 && index < 3) {
-                const nextInput = document.querySelectorAll(".otp-digit")[index + 1];
-                nextInput.focus()
-            }
+        loginEmployeeId() {
+            this.currentEmployee = this.employeeDatabase[this.employeeId]
+            if (!this.currentEmployee && this.employeeId.trim()) {
+                this.currentStep = 2
+            } else if (this.currentEmployee && this.employeeId.trim()) {
+                if (this.currentEmployee.isFirstTime) {
+                    this.currentStep = 3
+                } else {
+                    this.currentStep = 4
+                }
 
+            }
+            else {
+                {
+                    this.checkEmployeeId()
+                }
+            }
+            console.log("checl", this.currentEmployee)
+        },
+
+        moveToNext(index) {
+            if (this.otp[index] && index < this.otp.length - 1) {
+                this.$refs.otpInputs[index + 1].focus();
+            }
+        },
+        moveToPrev(index, event) {
+            if (!this.otp[index] && index > 0 && event.key === "Backspace") {
+                this.$refs.otpInputs[index - 1].focus();
+            }
         },
 
         verifyOTP(event) {
@@ -222,30 +264,15 @@ export default {
             const btn = event.target;
             btn.classList.add('btn-loading');
 
-            // // Simulate OTP verification
-            // setTimeout(() => {
-            //     btn.classList.remove('btn-loading');
-
-            //     // For demo, accept any 6-digit OTP
-            //     if (otp === '123456' || otp.length === 6) {
-            //         goToPasswordStep(true);
-            //     } else {
-            //         errorDiv.textContent = 'Mã OTP không đúng. Vui lòng thử lại.';
-            //         errorDiv.style.display = 'block';
-            //         // Clear OTP inputs
-            //         otpInputs.forEach(input => input.value = '');
-            //         otpInputs[0].focus();
-            //     }
-            // }, 1500);
             setTimeout(() => {
                 btn.classList.remove('btn-loading')
                 if (list === '1412' && list.length === 4) {
-                    //goToPasswordStep(true);
-                    console.log("YES")
-                    return;
+
+                    alert('Xác thực OTP thành công!')
+                    return
                 }
                 else {
-                    console.log("NO")
+                    alert('Xác thực OTP không thành công!')
                     return;
                 }
 
@@ -667,45 +694,4 @@ body {
 }
 
 /* DASHBOARD STYLES - Simplified since focus is on login flow */
-.dashboard {
-    display: none;
-    padding: 20px;
-    text-align: center;
-}
-
-.dashboard.active {
-    display: block;
-}
-
-.dashboard-header {
-    background: white;
-    border-radius: 16px;
-    padding: 32px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.dashboard-title {
-    font-size: 28px;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 8px;
-}
-
-.dashboard-subtitle {
-    color: #64748b;
-    font-size: 16px;
-}
-
-.logout-btn {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 24px;
-}
 </style>
