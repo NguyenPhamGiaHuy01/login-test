@@ -166,6 +166,7 @@ export default {
             this.currentStep = 1;
             this.employeeId = "";
             this.errorMessage = "";
+            this.password = "";
         },
         validateField(field) {
             if (field === "employeeId") {
@@ -188,19 +189,16 @@ export default {
                     this.errorMessage.password = "";
                 }
             }
-
-            if (this.errorMessage.employeeId || this.errorMessage.password) {
-                console.log("FALSE")
-                return false;
+            if (this.errorMessage.password == "" && this.errorMessage.employeeId == "") {
+                return true;
             }
-            console.log("TRUE")
-            return true;
+            return false
         },
         loginEmployeeId() {
-            // if () {
-            //     return; // Dừng lại nếu có lỗi
-            // }
-
+           
+            if (  !this.validateField("employeeId") && !this.validateField("password")) {
+                return;
+            }
             this.currentEmployee = this.employeeDatabase[this.employeeId];
 
             if (!this.currentEmployee) {
@@ -213,8 +211,6 @@ export default {
                 return;
             }
 
-            // Nếu đúng cả employeeId và password
-            console.log("Đăng nhập thành công:", this.currentEmployee);
             this.errorMessage = { employeeId: "", password: "" };
 
             // Chuyển bước
