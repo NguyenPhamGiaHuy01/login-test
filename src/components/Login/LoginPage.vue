@@ -160,11 +160,18 @@ export default {
 
         }
     },
+    created() {
+
+        this.currentStep = parseInt(localStorage.getItem("currentStep") ? localStorage.getItem("currentStep") : 1) ;
+        this.currentEmployee = JSON.parse(localStorage.getItem("currentEmployee") ? localStorage.getItem("currentEmployee") : null);
+    },
     methods: {
 
         goBackToStart() {
             this.currentStep = 1;
             this.errorMessage = "";
+            localStorage.removeItem("currentStep");
+            localStorage.removeItem("currentEmployee");
         },
         validateField(field) {
             if (field === "employeeId") {
@@ -193,8 +200,9 @@ export default {
             return false
         },
         loginEmployeeId() {
-           
-            if (  !this.validateField("employeeId") && !this.validateField("password")) {
+
+
+            if (!this.validateField("employeeId") && !this.validateField("password")) {
                 return;
             }
             this.currentEmployee = this.employeeDatabase[this.employeeId];
@@ -202,17 +210,16 @@ export default {
             if (!this.currentEmployee) {
                 this.errorMessage.employeeId = "❌ Không tìm thấy tài khoản này";
                 this.currentStep = 2;
-            }
-
-            if (this.password !== this.currentEmployee.password) {
+            } else if (this.password !== this.currentEmployee.password) {
                 this.errorMessage.password = "❌ Mật khẩu không đúng";
                 return;
             }
-
             this.errorMessage = { employeeId: "", password: "" };
 
             // Chuyển bước
             this.currentStep = 3;
+            localStorage.setItem("currentEmployee", JSON.stringify(this.currentEmployee));
+            localStorage.setItem("currentStep", this.currentStep);
         },
 
         moveToNext(index) {
@@ -232,10 +239,6 @@ export default {
                 .map(input => input.value)
                 .filter(v => v !== "")
                 .join('');
-
-
-            console.log("value", list)
-            console.log("value", list.length)
             const errorDiv = document.getElementById('otp-error');
             if (list.length !== 4) {
                 errorDiv.textContent = 'Vui lòng nhập đầy đủ mã OTP';
