@@ -164,9 +164,7 @@ export default {
 
         goBackToStart() {
             this.currentStep = 1;
-            this.employeeId = "";
             this.errorMessage = "";
-            this.password = "";
         },
         validateField(field) {
             if (field === "employeeId") {
@@ -203,7 +201,7 @@ export default {
 
             if (!this.currentEmployee) {
                 this.errorMessage.employeeId = "❌ Không tìm thấy tài khoản này";
-                return;
+                this.currentStep = 2;
             }
 
             if (this.password !== this.currentEmployee.password) {
