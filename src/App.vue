@@ -1,15 +1,17 @@
 <template>
   <div id="app">
-   <login-page/>
+   <home-page/>
   </div>
 </template>
 
 <script>
-import LoginPage from "./components/Login/LoginPage.vue"
+import HomePage from './components/Home/HomePage.vue';
+
+//import LoginPage from "./components/Login/LoginPage.vue"
 export default {
   name: 'App',
   components: {
-     LoginPage
+     HomePage
   }
 }
 </script>
