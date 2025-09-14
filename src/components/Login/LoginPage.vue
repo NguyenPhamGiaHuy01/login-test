@@ -160,12 +160,18 @@ export default {
 
         }
     },
+    created() {
+
+        this.currentStep = parseInt(localStorage.getItem("currentStep") ? localStorage.getItem("currentStep") : 1) ;
+        this.currentEmployee = JSON.parse(localStorage.getItem("currentEmployee") ? localStorage.getItem("currentEmployee") : null);
+    },
     methods: {
 
         goBackToStart() {
             this.currentStep = 1;
-            this.employeeId = "";
             this.errorMessage = "";
+            localStorage.removeItem("currentStep");
+            localStorage.removeItem("currentEmployee");
         },
         validateField(field) {
             if (field === "employeeId") {
@@ -188,37 +194,32 @@ export default {
                     this.errorMessage.password = "";
                 }
             }
-
-            if (this.errorMessage.employeeId || this.errorMessage.password) {
-                console.log("FALSE")
-                return false;
+            if (this.errorMessage.password == "" && this.errorMessage.employeeId == "") {
+                return true;
             }
-            console.log("TRUE")
-            return true;
+            return false
         },
         loginEmployeeId() {
-            // if () {
-            //     return; // Dừng lại nếu có lỗi
-            // }
 
+
+            if (!this.validateField("employeeId") && !this.validateField("password")) {
+                return;
+            }
             this.currentEmployee = this.employeeDatabase[this.employeeId];
 
             if (!this.currentEmployee) {
                 this.errorMessage.employeeId = "❌ Không tìm thấy tài khoản này";
-                return;
-            }
-
-            if (this.password !== this.currentEmployee.password) {
+                this.currentStep = 2;
+            } else if (this.password !== this.currentEmployee.password) {
                 this.errorMessage.password = "❌ Mật khẩu không đúng";
                 return;
             }
-
-            // Nếu đúng cả employeeId và password
-            console.log("Đăng nhập thành công:", this.currentEmployee);
             this.errorMessage = { employeeId: "", password: "" };
 
             // Chuyển bước
             this.currentStep = 3;
+            localStorage.setItem("currentEmployee", JSON.stringify(this.currentEmployee));
+            localStorage.setItem("currentStep", this.currentStep);
         },
 
         moveToNext(index) {
@@ -238,10 +239,6 @@ export default {
                 .map(input => input.value)
                 .filter(v => v !== "")
                 .join('');
-
-
-            console.log("value", list)
-            console.log("value", list.length)
             const errorDiv = document.getElementById('otp-error');
             if (list.length !== 4) {
                 errorDiv.textContent = 'Vui lòng nhập đầy đủ mã OTP';
